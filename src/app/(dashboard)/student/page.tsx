@@ -5,15 +5,23 @@ import prisma from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 
 const StudentPage = async () => {
-  const { userId } = auth();
+  const session = await auth(); // Await auth to get userId properly
+  const userId = session?.userId;
+
+  if (!userId) {
+    return <p className="p-4 text-red-500">Unauthorized: Please log in.</p>;
+  }
 
   const classItem = await prisma.class.findMany({
     where: {
-      students: { some: { id: userId! } },
+      students: { some: { id: userId } },
     },
   });
 
-  console.log(classItem);
+  if (!classItem.length) {
+    return <p className="p-4 text-gray-500">No class schedule available.</p>;
+  }
+
   return (
     <div className="p-4 flex gap-4 flex-col xl:flex-row">
       {/* LEFT */}
